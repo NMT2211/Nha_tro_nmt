@@ -293,8 +293,28 @@ model TaiKhoan {
   tepTinTaiLens        TepTin[]
   nhatKyHeThongs       NhatKyHeThong[]
   nhatKyTruyCapDuLieus NhatKyTruyCapDuLieu[]
+  phienDangNhaps       PhienDangNhap[]
 
   @@map("tai_khoan")
+}
+
+model PhienDangNhap {
+  id                  String    @id @default(uuid()) @db.Uuid
+  taiKhoanId          String    @map("tai_khoan_id") @db.Uuid
+  refreshTokenHash    String    @map("refresh_token_hash")
+  expiresAt           DateTime  @map("expires_at")
+  revokedAt           DateTime? @map("revoked_at")
+  replacedBySessionId String?   @map("replaced_by_session_id") @db.Uuid
+  diaChiIp            String?   @map("dia_chi_ip")
+  userAgent           String?   @map("user_agent")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  lastUsedAt          DateTime? @map("last_used_at")
+
+  taiKhoan TaiKhoan @relation(fields: [taiKhoanId], references: [id], onDelete: Cascade)
+
+  @@index([taiKhoanId, revokedAt])
+  @@index([expiresAt])
+  @@map("phien_dang_nhap")
 }
 
 // =====================================================
