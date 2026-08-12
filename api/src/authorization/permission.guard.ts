@@ -41,7 +41,7 @@ export class PermissionGuard implements CanActivate {
     const rawScopeId =
       scope === 'TO_CHUC'
         ? (request.params.id ?? request.params.toChucId)
-        : request.params.khuTroId;
+        : await this.permissions.resolveKhuTroId(request.params);
     const scopeId = Array.isArray(rawScopeId) ? rawScopeId[0] : rawScopeId;
     if (
       !scopeId ||

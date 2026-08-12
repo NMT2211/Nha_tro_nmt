@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '../../generated/prisma/client';
 import type { SignOptions } from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaiKhoanService } from '../tai-khoan/tai-khoan.service';
@@ -28,12 +29,38 @@ export class AuthService {
     if (await this.accounts.findByEmail(dto.email))
       throw new ConflictException('Email đã được sử dụng');
     const matKhauHash = await this.passwords.hash(dto.matKhau);
-    return this.accounts.create({
-      hoTen: dto.hoTen,
-      email: dto.email,
-      ...(dto.soDienThoai ? { soDienThoai: dto.soDienThoai } : {}),
-      matKhauHash,
-    });
+    try {
+      return await this.accounts.create({
+        hoTen: dto.hoTen,
+        email: dto.email,
+        ...(dto.soDienThoai ? { soDienThoai: dto.soDienThoai } : {}),
+        matKhauHash,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const rawTarget = error.meta?.target;
+        const target = Array.isArray(rawTarget)
+          ? rawTarget
+              .filter((item): item is string => typeof item === 'string')
+              .join(',')
+          : typeof rawTarget === 'string'
+            ? rawTarget
+            : '';
+        if (target.includes('email'))
+          throw new ConflictException('Email đã được sử dụng');
+        if (target.includes('so_dien_thoai') || target.includes('soDienThoai'))
+          throw new ConflictException('Số điện thoại đã được sử dụng');
+        if (await this.accounts.findByEmail(dto.email))
+          throw new ConflictException('Email đã được sử dụng');
+        if (dto.soDienThoai)
+          throw new ConflictException('Số điện thoại đã được sử dụng');
+        throw new ConflictException('Dữ liệu tài khoản đã tồn tại');
+      }
+      throw error;
+    }
   }
 
   async login(dto: DangNhapDto, metadata: RequestMetadata): Promise<TokenPair> {

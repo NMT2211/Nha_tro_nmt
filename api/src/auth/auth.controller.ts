@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Ip,
   NotFoundException,
   Post,
@@ -26,21 +28,21 @@ export class AuthController {
   @Post('register') register(@Body() dto: DangKyDto) {
     return this.auth.register(dto);
   }
-  @Post('login') login(
+  @Post('login') @HttpCode(HttpStatus.OK) login(
     @Body() dto: DangNhapDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent?: string,
   ) {
     return this.auth.login(dto, this.metadata(ip, userAgent));
   }
-  @Post('refresh') refresh(
+  @Post('refresh') @HttpCode(HttpStatus.OK) refresh(
     @Body() dto: LamMoiTokenDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent?: string,
   ) {
     return this.auth.refresh(dto.refreshToken, this.metadata(ip, userAgent));
   }
-  @Post('logout') @UseGuards(JwtAuthGuard) logout(
+  @Post('logout') @HttpCode(HttpStatus.OK) @UseGuards(JwtAuthGuard) logout(
     @CurrentUser() user: JwtPayload,
   ) {
     return this.auth.logout(user);

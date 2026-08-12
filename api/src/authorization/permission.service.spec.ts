@@ -23,4 +23,18 @@ describe('PermissionService', () => {
       ]),
     ).resolves.toBe(false);
   });
+  it('requires both invite flag and permission', async () => {
+    const prisma = {
+      thanhVienKhuTro: {
+        findFirst: jest.fn().mockResolvedValue({
+          duocMoiThanhVien: false,
+          vaiTro: { vaiTroQuyens: [{ quyenId: 'q' }] },
+        }),
+      },
+    };
+    const service = new PermissionService(prisma as unknown as PrismaService);
+    await expect(service.canInviteKhuTroMember('user', 'khu')).resolves.toBe(
+      false,
+    );
+  });
 });

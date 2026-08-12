@@ -55,14 +55,14 @@ export class PermissionService {
     return required.every((permission) => granted.has(permission));
   }
 
-  async canInvitePropertyMember(
+  async canInviteKhuTroMember(
     userId: string,
-    propertyId: string,
+    khuTroId: string,
   ): Promise<boolean> {
     const membership = await this.prisma.thanhVienKhuTro.findFirst({
       where: {
         taiKhoanId: userId,
-        khuTroId: propertyId,
+        khuTroId,
         trangThai: 'HOAT_DONG',
       },
       select: {
@@ -80,5 +80,59 @@ export class PermissionService {
     return Boolean(
       membership?.duocMoiThanhVien && membership.vaiTro.vaiTroQuyens.length > 0,
     );
+  }
+
+  async resolveKhuTroId(params: Record<string, string | string[] | undefined>) {
+    const read = (key: string) => {
+      const raw = params[key];
+      return Array.isArray(raw) ? raw[0] : raw;
+    };
+    const khuTroId = read('khuTroId');
+    const phongId = read('phongId');
+    const khoiNhaId = read('khoiNhaId');
+    const tangId = read('tangId');
+    const id = read('id');
+    if (khuTroId) return khuTroId;
+    if (phongId) {
+      const phong = await this.prisma.phong.findFirst({
+        where: { id: phongId, deletedAt: null },
+        select: { khuTroId: true },
+      });
+      return phong?.khuTroId;
+    }
+    if (khoiNhaId) {
+      const khoiNha = await this.prisma.khoiNha.findFirst({
+        where: { id: khoiNhaId, deletedAt: null },
+        select: { khuTroId: true },
+      });
+      return khoiNha?.khuTroId;
+    }
+    if (tangId) {
+      const tang = await this.prisma.tang.findFirst({
+        where: { id: tangId, deletedAt: null },
+        select: { khoiNha: { select: { khuTroId: true } } },
+      });
+      return tang?.khoiNha.khuTroId;
+    }
+    if (id) {
+      const [phong, khoiNha, tang] = await Promise.all([
+        this.prisma.phong.findFirst({
+          where: { id, deletedAt: null },
+          select: { khuTroId: true },
+        }),
+        this.prisma.khoiNha.findFirst({
+          where: { id, deletedAt: null },
+          select: { khuTroId: true },
+        }),
+        this.prisma.tang.findFirst({
+          where: { id, deletedAt: null },
+          select: { khoiNha: { select: { khuTroId: true } } },
+        }),
+      ]);
+      return (
+        phong?.khuTroId ?? khoiNha?.khuTroId ?? tang?.khoiNha.khuTroId ?? id
+      );
+    }
+    return undefined;
   }
 }

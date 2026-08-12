@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../../generated/prisma/client';
 import { TaiKhoanService } from '../tai-khoan/tai-khoan.service';
 import { AuthService } from './auth.service';
 
@@ -96,6 +97,44 @@ describe('AuthService', () => {
         matKhau: 'StrongPassword123',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('returns a clear conflict for a duplicate phone', async () => {
+    accounts.findByEmail.mockResolvedValue(null);
+    passwords.hash.mockResolvedValue('hash');
+    accounts.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+        code: 'P2002',
+        clientVersion: '7.9.1',
+      }),
+    );
+    await expect(
+      service.register({
+        hoTen: 'User',
+        email: 'new@example.com',
+        soDienThoai: '0901234567',
+        matKhau: 'StrongPassword123',
+      }),
+    ).rejects.toThrow('Số điện thoại đã được sử dụng');
+  });
+
+  it('returns a clear conflict when an email races during creation', async () => {
+    accounts.findByEmail.mockResolvedValue(null);
+    passwords.hash.mockResolvedValue('hash');
+    accounts.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+        code: 'P2002',
+        clientVersion: '7.9.1',
+        meta: { target: ['email'] },
+      }),
+    );
+    await expect(
+      service.register({
+        hoTen: 'User',
+        email: 'used@example.com',
+        matKhau: 'StrongPassword123',
+      }),
+    ).rejects.toThrow('Email đã được sử dụng');
   });
 
   it('rotates a valid refresh token and revokes the previous session atomically', async () => {

@@ -9,6 +9,10 @@ import { environmentValidationSchema } from './config/environment';
 import { PrismaModule } from './prisma/prisma.module';
 import { TaiKhoanModule } from './tai-khoan/tai-khoan.module';
 import { ToChucModule } from './to-chuc/to-chuc.module';
+import { KhuTroModule } from './khu-tro/khu-tro.module';
+import { KhoiNhaModule } from './khoi-nha/khoi-nha.module';
+import { TangModule } from './tang/tang.module';
+import { PhongModule } from './phong/phong.module';
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { ToChucModule } from './to-chuc/to-chuc.module';
     AuditModule,
     TaiKhoanModule,
     ToChucModule,
+    KhuTroModule,
+    KhoiNhaModule,
+    TangModule,
+    PhongModule,
   ],
   controllers: [AppController],
   providers: [AppService],
