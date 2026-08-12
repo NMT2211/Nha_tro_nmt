@@ -23,29 +23,29 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly accounts: TaiKhoanService,
   ) {}
-  @Post('dang-ky') register(@Body() dto: DangKyDto) {
+  @Post('register') register(@Body() dto: DangKyDto) {
     return this.auth.register(dto);
   }
-  @Post('dang-nhap') login(
+  @Post('login') login(
     @Body() dto: DangNhapDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent?: string,
   ) {
     return this.auth.login(dto, this.metadata(ip, userAgent));
   }
-  @Post('lam-moi-token') refresh(
+  @Post('refresh') refresh(
     @Body() dto: LamMoiTokenDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent?: string,
   ) {
     return this.auth.refresh(dto.refreshToken, this.metadata(ip, userAgent));
   }
-  @Post('dang-xuat') @UseGuards(JwtAuthGuard) logout(
+  @Post('logout') @UseGuards(JwtAuthGuard) logout(
     @CurrentUser() user: JwtPayload,
   ) {
     return this.auth.logout(user);
   }
-  @Get('toi') @UseGuards(JwtAuthGuard) async me(
+  @Get('me') @UseGuards(JwtAuthGuard) async me(
     @CurrentUser() user: JwtPayload,
   ) {
     const account = await this.accounts.findById(user.sub);
@@ -53,6 +53,9 @@ export class AuthController {
     return account;
   }
   private metadata(ip: string, userAgent?: string): RequestMetadata {
-    return { ip, ...(userAgent ? { userAgent: userAgent.slice(0, 500) } : {}) };
+    return {
+      diaChiIp: ip,
+      ...(userAgent ? { userAgent: userAgent.slice(0, 500) } : {}),
+    };
   }
 }

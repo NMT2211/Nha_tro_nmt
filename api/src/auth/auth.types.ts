@@ -4,7 +4,7 @@ export interface JwtPayload {
   sessionId: string;
 }
 export interface RequestMetadata {
-  ip?: string;
+  diaChiIp?: string;
   userAgent?: string;
 }
 export interface TokenPair {

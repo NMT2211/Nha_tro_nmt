@@ -8,7 +8,7 @@ import { TaiKhoanService } from './tai-khoan.service';
 @UseGuards(JwtAuthGuard)
 export class TaiKhoanController {
   constructor(private readonly service: TaiKhoanService) {}
-  @Get('toi') async me(@CurrentUser() user: JwtPayload) {
+  @Get('me') async me(@CurrentUser() user: JwtPayload) {
     const account = await this.service.findById(user.sub);
     if (!account) throw new NotFoundException('Không tìm thấy tài khoản');
     return account;

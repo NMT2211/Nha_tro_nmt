@@ -90,7 +90,8 @@ export class AuthService {
           taiKhoanId: session.taiKhoanId,
           refreshTokenHash,
           expiresAt: this.refreshExpiry(),
-          ...metadata,
+          diaChiIp: metadata.diaChiIp,
+          userAgent: metadata.userAgent,
         },
       });
     });
@@ -118,7 +119,8 @@ export class AuthService {
         taiKhoanId: accountId,
         refreshTokenHash: await this.passwords.hash(tokens.refreshToken),
         expiresAt: this.refreshExpiry(),
-        ...metadata,
+        diaChiIp: metadata.diaChiIp,
+        userAgent: metadata.userAgent,
       },
     });
     return tokens;

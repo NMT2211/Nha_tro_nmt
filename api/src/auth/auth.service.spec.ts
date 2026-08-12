@@ -7,7 +7,12 @@ import { AuthService } from './auth.service';
 
 jest.mock('../prisma/prisma.service', () => ({ PrismaService: class {} }));
 
+interface SessionCreateArgs {
+  data: { diaChiIp?: string; userAgent?: string };
+}
+
 describe('AuthService', () => {
+  let loginCreate: SessionCreateArgs | undefined;
   const account = {
     id: '71b39d2b-34ab-4fb0-8010-4ffde561479e',
     email: 'user@example.com',
@@ -33,13 +38,19 @@ describe('AuthService', () => {
     ),
   };
   const prisma = {
-    phienDangNhap: { create: jest.fn(), findUnique: jest.fn() },
+    phienDangNhap: {
+      create: jest.fn((args: SessionCreateArgs) => {
+        loginCreate = args;
+      }),
+      findUnique: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
   let service: AuthService;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    loginCreate = undefined;
     service = new AuthService(
       prisma as unknown as PrismaService,
       accounts as unknown as TaiKhoanService,
@@ -57,10 +68,15 @@ describe('AuthService', () => {
       .mockResolvedValueOnce('access')
       .mockResolvedValueOnce('refresh');
     await expect(
-      service.login({ email: account.email, matKhau: 'StrongPassword123' }, {}),
+      service.login(
+        { email: account.email, matKhau: 'StrongPassword123' },
+        { diaChiIp: '127.0.0.1', userAgent: 'test-agent' },
+      ),
     ).resolves.toEqual({ accessToken: 'access', refreshToken: 'refresh' });
     expect(passwords.hash).toHaveBeenCalledWith('refresh');
     expect(prisma.phienDangNhap.create).toHaveBeenCalledTimes(1);
+    expect(loginCreate?.data.diaChiIp).toBe('127.0.0.1');
+    expect(loginCreate?.data.userAgent).toBe('test-agent');
   });
 
   it('uses a generic error for a wrong password', async () => {
@@ -101,22 +117,30 @@ describe('AuthService', () => {
     jwt.signAsync
       .mockResolvedValueOnce('new-access')
       .mockResolvedValueOnce('new-refresh');
+    let refreshCreate: SessionCreateArgs | undefined;
     const tx = {
       phienDangNhap: {
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-        create: jest.fn(),
+        create: jest.fn((args: SessionCreateArgs) => {
+          refreshCreate = args;
+        }),
       },
     };
     prisma.$transaction.mockImplementation(
       async (callback: (client: typeof tx) => Promise<void>) => callback(tx),
     );
     await expect(
-      service.refresh('old-refresh-token-value', {}),
+      service.refresh('old-refresh-token-value', {
+        diaChiIp: '127.0.0.2',
+        userAgent: 'refresh-agent',
+      }),
     ).resolves.toEqual({
       accessToken: 'new-access',
       refreshToken: 'new-refresh',
     });
     expect(tx.phienDangNhap.updateMany).toHaveBeenCalled();
-    expect(tx.phienDangNhap.create).toHaveBeenCalled();
+    expect(tx.phienDangNhap.create).toHaveBeenCalledTimes(1);
+    expect(refreshCreate?.data.diaChiIp).toBe('127.0.0.2');
+    expect(refreshCreate?.data.userAgent).toBe('refresh-agent');
   });
 });
