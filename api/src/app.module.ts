@@ -13,6 +13,8 @@ import { KhuTroModule } from './khu-tro/khu-tro.module';
 import { KhoiNhaModule } from './khoi-nha/khoi-nha.module';
 import { TangModule } from './tang/tang.module';
 import { PhongModule } from './phong/phong.module';
+import { CaNhanModule } from './ca-nhan/ca-nhan.module';
+import { HopDongModule } from './hop-dong/hop-dong.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { PhongModule } from './phong/phong.module';
     KhoiNhaModule,
     TangModule,
     PhongModule,
+    CaNhanModule,
+    HopDongModule,
   ],
   controllers: [AppController],
   providers: [AppService],

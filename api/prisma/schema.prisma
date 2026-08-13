@@ -791,6 +791,7 @@ model HopDong {
   giaThueThoaThuan BigInt @map("gia_thue_thoa_thuan")
   soNguoiBaoGom    Int    @default(1) @map("so_nguoi_bao_gom")
   giaThemMoiNguoi  BigInt @default(0) @map("gia_them_moi_nguoi")
+  soNguoiToiDa     Int?   @map("so_nguoi_toi_da")
 
   tienCocThoaThuan BigInt @default(0) @map("tien_coc_thoa_thuan")
 

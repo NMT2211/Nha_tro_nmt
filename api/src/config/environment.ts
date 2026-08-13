@@ -20,4 +20,5 @@ export const environmentValidationSchema = Joi.object({
     .pattern(/^\d+[smhd]$/)
     .default('30d'),
   CORS_ORIGINS: Joi.string().allow('').default(''),
+  IDENTITY_DATA_KEY: Joi.string().base64().optional(),
 });
