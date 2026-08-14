@@ -15,6 +15,8 @@ import { TangModule } from './tang/tang.module';
 import { PhongModule } from './phong/phong.module';
 import { CaNhanModule } from './ca-nhan/ca-nhan.module';
 import { HopDongModule } from './hop-dong/hop-dong.module';
+import { DichVuModule } from './dich-vu/dich-vu.module';
+import { CongToModule } from './cong-to/cong-to.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { HopDongModule } from './hop-dong/hop-dong.module';
     PhongModule,
     CaNhanModule,
     HopDongModule,
+    DichVuModule,
+    CongToModule,
   ],
   controllers: [AppController],
   providers: [AppService],

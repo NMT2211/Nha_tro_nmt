@@ -21,7 +21,9 @@ function databaseIdentity(value) {
     const url = new URL(value);
     return `${url.protocol}//${url.hostname.toLowerCase()}:${url.port || '5432'}${decodeURIComponent(url.pathname)}`;
   } catch {
-    console.error('E2E bị dừng: TEST_DATABASE_URL không phải PostgreSQL URL hợp lệ.');
+    console.error(
+      'E2E bị dừng: TEST_DATABASE_URL không phải PostgreSQL URL hợp lệ.',
+    );
     process.exit(1);
   }
 }
@@ -49,22 +51,30 @@ const env = {
   CORS_ORIGINS: '',
 };
 function run(modulePath, args, nodeArgs = []) {
-  const result = spawnSync(process.execPath, [...nodeArgs, path.join(apiRoot, modulePath), ...args], {
-    cwd: apiRoot,
-    env,
-    stdio: 'inherit',
-    shell: false,
-  });
+  const result = spawnSync(
+    process.execPath,
+    [...nodeArgs, path.join(apiRoot, modulePath), ...args],
+    {
+      cwd: apiRoot,
+      env,
+      stdio: 'inherit',
+      shell: false,
+    },
+  );
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
 console.log('E2E database: applying committed Prisma migrations...');
 run('node_modules/prisma/build/index.js', ['migrate', 'deploy']);
-console.log('E2E database ready. Running Phase 3 E2E tests...');
-run('node_modules/jest/bin/jest.js', [
-  '--config',
-  './test/jest-e2e.json',
-  '--runInBand',
-  ...(process.argv.includes('--watch') ? ['--watch'] : []),
-], ['--experimental-vm-modules']);
+console.log('E2E database ready. Running Phase 3 and Phase 4 E2E tests...');
+run(
+  'node_modules/jest/bin/jest.js',
+  [
+    '--config',
+    './test/jest-e2e.json',
+    '--runInBand',
+    ...(process.argv.includes('--watch') ? ['--watch'] : []),
+  ],
+  ['--experimental-vm-modules'],
+);

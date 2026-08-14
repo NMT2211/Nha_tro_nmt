@@ -91,8 +91,32 @@ export class PermissionService {
     const phongId = read('phongId');
     const khoiNhaId = read('khoiNhaId');
     const tangId = read('tangId');
+    const dichVuId = read('dichVuId');
+    const congToId = read('congToId');
+    const hopDongId = read('hopDongId');
     const id = read('id');
     if (khuTroId) return khuTroId;
+    if (dichVuId) {
+      const row = await this.prisma.dichVu.findFirst({
+        where: { id: dichVuId, deletedAt: null },
+        select: { khuTroId: true },
+      });
+      return row?.khuTroId;
+    }
+    if (congToId) {
+      const row = await this.prisma.congTo.findFirst({
+        where: { id: congToId, deletedAt: null },
+        select: { khuTroId: true },
+      });
+      return row?.khuTroId;
+    }
+    if (hopDongId) {
+      const row = await this.prisma.hopDong.findFirst({
+        where: { id: hopDongId, deletedAt: null },
+        select: { khuTroId: true },
+      });
+      return row?.khuTroId;
+    }
     if (phongId) {
       const phong = await this.prisma.phong.findFirst({
         where: { id: phongId, deletedAt: null },
@@ -115,7 +139,7 @@ export class PermissionService {
       return tang?.khoiNha.khuTroId;
     }
     if (id) {
-      const [phong, khoiNha, tang] = await Promise.all([
+      const [phong, khoiNha, tang, dichVu, congTo] = await Promise.all([
         this.prisma.phong.findFirst({
           where: { id, deletedAt: null },
           select: { khuTroId: true },
@@ -128,9 +152,22 @@ export class PermissionService {
           where: { id, deletedAt: null },
           select: { khoiNha: { select: { khuTroId: true } } },
         }),
+        this.prisma.dichVu.findFirst({
+          where: { id, deletedAt: null },
+          select: { khuTroId: true },
+        }),
+        this.prisma.congTo.findFirst({
+          where: { id, deletedAt: null },
+          select: { khuTroId: true },
+        }),
       ]);
       return (
-        phong?.khuTroId ?? khoiNha?.khuTroId ?? tang?.khoiNha.khuTroId ?? id
+        phong?.khuTroId ??
+        khoiNha?.khuTroId ??
+        tang?.khoiNha.khuTroId ??
+        dichVu?.khuTroId ??
+        congTo?.khuTroId ??
+        id
       );
     }
     return undefined;

@@ -20,6 +20,20 @@ async function main(): Promise<void> {
       create: permission,
     });
   }
+  const ownerRoles = await prisma.vaiTro.findMany({
+    where: { maVaiTro: 'CHU_SO_HUU', laHeThong: true },
+    select: { id: true },
+  });
+  const permissions = await prisma.quyen.findMany({ select: { id: true } });
+  await prisma.vaiTroQuyen.createMany({
+    data: ownerRoles.flatMap((role) =>
+      permissions.map((permission) => ({
+        vaiTroId: role.id,
+        quyenId: permission.id,
+      })),
+    ),
+    skipDuplicates: true,
+  });
 }
 
 main().finally(async () => prisma.$disconnect());
