@@ -1072,7 +1072,8 @@ model ChiSoCongTo {
   anhCongTo TepTin?  @relation("AnhCongTo", fields: [anhCongToId], references: [id], onDelete: SetNull)
   nguoiGhi  TaiKhoan @relation(fields: [nguoiGhiId], references: [id], onDelete: Restrict)
 
-  dieuChinhs DieuChinhChiSo[]
+  dieuChinhs   DieuChinhChiSo[]
+  nguonHoaDons NguonChiSoHoaDon[]
 
   @@unique([congToId, tuNgay, denNgay])
   @@index([congToId, ngayGhi])
@@ -1172,10 +1173,23 @@ model ChiTietHoaDon {
   duLieuNguon Json? @map("du_lieu_nguon")
   thuTu       Int   @default(0) @map("thu_tu")
 
-  hoaDon HoaDon @relation(fields: [hoaDonId], references: [id], onDelete: Cascade)
+  hoaDon      HoaDon             @relation(fields: [hoaDonId], references: [id], onDelete: Cascade)
+  nguonChiSos NguonChiSoHoaDon[]
 
   @@index([hoaDonId])
   @@map("chi_tiet_hoa_don")
+}
+
+model NguonChiSoHoaDon {
+  chiTietHoaDonId String @map("chi_tiet_hoa_don_id") @db.Uuid
+  chiSoCongToId   String @unique(map: "uq_nguon_chi_so_hoa_don_chi_so_cong_to") @map("chi_so_cong_to_id") @db.Uuid
+
+  chiTietHoaDon ChiTietHoaDon @relation(fields: [chiTietHoaDonId], references: [id], onDelete: Cascade)
+  chiSoCongTo   ChiSoCongTo   @relation(fields: [chiSoCongToId], references: [id], onDelete: Restrict)
+
+  @@id([chiTietHoaDonId, chiSoCongToId])
+  @@index([chiTietHoaDonId])
+  @@map("nguon_chi_so_hoa_don")
 }
 
 model PhienBanHoaDon {

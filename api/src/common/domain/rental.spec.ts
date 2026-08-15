@@ -3,6 +3,7 @@ import {
   canTransitionHopDong,
   canTransitionTraPhong,
   daysBetween,
+  inclusiveDays,
   parseDateOnly,
   prorate30Days,
   requiresImmediateFirstRent,
@@ -18,6 +19,7 @@ describe('rental domain', () => {
     const end = parseDateOnly('2026-03-02');
     expect(daysBetween(start, end)).toBe(2);
     expect(start.toISOString()).toBe('2026-02-28T00:00:00.000Z');
+    expect(inclusiveDays(start, end)).toBe(3);
   });
   it('marks move-in before day 10 for immediate collection', () => {
     expect(requiresImmediateFirstRent(parseDateOnly('2026-01-09'))).toBe(true);

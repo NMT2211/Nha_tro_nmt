@@ -384,6 +384,7 @@ export class DichVuService {
         unknown
       >;
       let quantity = a.soLuongMacDinh?.toString() ?? '1';
+      let chiSoCongToIds: string[] = [];
       let calc;
       if (a.chinhSachGia.kieuTinh === KieuTinhDichVu.MIEN_PHI)
         calc = tinhCoDinh(0n);
@@ -451,7 +452,9 @@ export class DichVuService {
             tuNgay: { lte: end },
             denNgay: { gte: start },
           },
+          orderBy: [{ tuNgay: 'asc' }, { id: 'asc' }],
         });
+        chiSoCongToIds = readings.map((reading) => reading.id);
         quantity = readings
           .reduce(
             (sum, r) => sum.plus(r.sanLuongTieuThu),
@@ -478,7 +481,10 @@ export class DichVuService {
         dichVuId: a.dichVuId,
         chinhSachGiaId: a.chinhSachGiaId,
         tenDichVu: a.dichVu.tenDichVu,
+        loaiDichVu: a.dichVu.loaiDichVu,
+        donVi: a.dichVu.donVi,
         kieuTinh: a.chinhSachGia.kieuTinh,
+        chiSoCongToIds,
         ...calc,
       });
     }

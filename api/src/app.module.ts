@@ -17,6 +17,8 @@ import { CaNhanModule } from './ca-nhan/ca-nhan.module';
 import { HopDongModule } from './hop-dong/hop-dong.module';
 import { DichVuModule } from './dich-vu/dich-vu.module';
 import { CongToModule } from './cong-to/cong-to.module';
+import { HoaDonModule } from './hoa-don/hoa-don.module';
+import { PhieuThuModule } from './phieu-thu/phieu-thu.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { CongToModule } from './cong-to/cong-to.module';
     HopDongModule,
     DichVuModule,
     CongToModule,
+    HoaDonModule,
+    PhieuThuModule,
   ],
   controllers: [AppController],
   providers: [AppService],

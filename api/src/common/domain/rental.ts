@@ -60,6 +60,11 @@ export function prorate30Days(monthlyAmount: bigint, days: number): bigint {
   return (monthlyAmount * BigInt(days)) / 30n;
 }
 
+export function inclusiveDays(start: Date, end: Date): number {
+  if (end < start) return 0;
+  return daysBetween(start, end) + 1;
+}
+
 export function parseDateOnly(value: string): Date {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value))
     throw new RangeError('Ngày phải có định dạng YYYY-MM-DD');

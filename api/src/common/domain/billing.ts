@@ -1,4 +1,5 @@
 import { Prisma } from '../../../generated/prisma/client';
+import { TrangThaiHoaDon } from '../../../generated/prisma/client';
 
 export interface KetQuaTinhDichVu {
   soLuong: string;
@@ -89,4 +90,77 @@ export function tinhSanLuongCongTo(
   if (newValue.lessThan(oldValue))
     throw new RangeError('Chỉ số mới không được nhỏ hơn chỉ số cũ');
   return newValue.minus(oldValue).times(new Prisma.Decimal(heSoNhan));
+}
+
+export function tongTienHoaDon(
+  lines: readonly { thanhTien: bigint }[],
+): bigint {
+  const total = lines.reduce((sum, line) => sum + line.thanhTien, 0n);
+  if (total < 0n) throw new RangeError('Tổng hóa đơn không được âm');
+  return total;
+}
+
+export function trangThaiTheoThanhToan(input: {
+  tongTien: bigint;
+  daThanhToan: bigint;
+  hanThanhToan: Date;
+  now?: Date;
+}): TrangThaiHoaDon {
+  if (input.daThanhToan < 0n || input.daThanhToan > input.tongTien)
+    throw new RangeError('Số tiền đã thanh toán không hợp lệ');
+  if (input.daThanhToan >= input.tongTien) return TrangThaiHoaDon.DA_THANH_TOAN;
+  if (input.daThanhToan > 0n) return TrangThaiHoaDon.THANH_TOAN_MOT_PHAN;
+  const now = input.now ?? new Date();
+  return input.hanThanhToan <
+    new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    )
+    ? TrangThaiHoaDon.QUA_HAN
+    : TrangThaiHoaDon.CHO_THANH_TOAN;
+}
+
+export function tinhCongNo(
+  invoices: readonly { tongTien: bigint; daThanhToan: bigint }[],
+) {
+  const tongHoaDon = invoices.reduce((sum, row) => sum + row.tongTien, 0n);
+  const tongDaThanhToan = invoices.reduce(
+    (sum, row) => sum + row.daThanhToan,
+    0n,
+  );
+  if (tongDaThanhToan > tongHoaDon)
+    throw new RangeError('Số tiền đã thanh toán vượt quá tổng hóa đơn');
+  return {
+    tongHoaDon,
+    tongDaThanhToan,
+    tongConNo: tongHoaDon - tongDaThanhToan,
+  };
+}
+
+export function kiemTraPhanBo(input: {
+  soTienPhieuThu: bigint;
+  phanBos: readonly { soTien: bigint; conNo: bigint }[];
+}): void {
+  if (input.soTienPhieuThu <= 0n || input.phanBos.length === 0)
+    throw new RangeError('Phiếu thu và phân bổ phải lớn hơn 0');
+  let total = 0n;
+  for (const row of input.phanBos) {
+    if (row.soTien <= 0n)
+      throw new RangeError('Số tiền phân bổ phải lớn hơn 0');
+    if (row.soTien > row.conNo)
+      throw new RangeError('Số tiền phân bổ vượt quá công nợ');
+    total += row.soTien;
+  }
+  if (total !== input.soTienPhieuThu)
+    throw new RangeError('Tổng phân bổ phải bằng số tiền phiếu thu');
+}
+
+export function kiemTraTongSauDieuChinh(
+  tongTienMoi: bigint,
+  daThanhToan: bigint,
+): void {
+  if (tongTienMoi < 0n) throw new RangeError('Tổng hóa đơn không được âm');
+  if (tongTienMoi < daThanhToan)
+    throw new RangeError(
+      'Không thể giảm tổng hóa đơn thấp hơn số tiền đã thanh toán',
+    );
 }

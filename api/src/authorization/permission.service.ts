@@ -94,6 +94,8 @@ export class PermissionService {
     const dichVuId = read('dichVuId');
     const congToId = read('congToId');
     const hopDongId = read('hopDongId');
+    const hoaDonId = read('hoaDonId');
+    const phieuThuId = read('phieuThuId');
     const id = read('id');
     if (khuTroId) return khuTroId;
     if (dichVuId) {
@@ -113,6 +115,20 @@ export class PermissionService {
     if (hopDongId) {
       const row = await this.prisma.hopDong.findFirst({
         where: { id: hopDongId, deletedAt: null },
+        select: { khuTroId: true },
+      });
+      return row?.khuTroId;
+    }
+    if (hoaDonId) {
+      const row = await this.prisma.hoaDon.findUnique({
+        where: { id: hoaDonId },
+        select: { khuTroId: true },
+      });
+      return row?.khuTroId;
+    }
+    if (phieuThuId) {
+      const row = await this.prisma.phieuThu.findUnique({
+        where: { id: phieuThuId },
         select: { khuTroId: true },
       });
       return row?.khuTroId;
@@ -139,34 +155,45 @@ export class PermissionService {
       return tang?.khoiNha.khuTroId;
     }
     if (id) {
-      const [phong, khoiNha, tang, dichVu, congTo] = await Promise.all([
-        this.prisma.phong.findFirst({
-          where: { id, deletedAt: null },
-          select: { khuTroId: true },
-        }),
-        this.prisma.khoiNha.findFirst({
-          where: { id, deletedAt: null },
-          select: { khuTroId: true },
-        }),
-        this.prisma.tang.findFirst({
-          where: { id, deletedAt: null },
-          select: { khoiNha: { select: { khuTroId: true } } },
-        }),
-        this.prisma.dichVu.findFirst({
-          where: { id, deletedAt: null },
-          select: { khuTroId: true },
-        }),
-        this.prisma.congTo.findFirst({
-          where: { id, deletedAt: null },
-          select: { khuTroId: true },
-        }),
-      ]);
+      const [phong, khoiNha, tang, dichVu, congTo, hoaDon, phieuThu] =
+        await Promise.all([
+          this.prisma.phong.findFirst({
+            where: { id, deletedAt: null },
+            select: { khuTroId: true },
+          }),
+          this.prisma.khoiNha.findFirst({
+            where: { id, deletedAt: null },
+            select: { khuTroId: true },
+          }),
+          this.prisma.tang.findFirst({
+            where: { id, deletedAt: null },
+            select: { khoiNha: { select: { khuTroId: true } } },
+          }),
+          this.prisma.dichVu.findFirst({
+            where: { id, deletedAt: null },
+            select: { khuTroId: true },
+          }),
+          this.prisma.congTo.findFirst({
+            where: { id, deletedAt: null },
+            select: { khuTroId: true },
+          }),
+          this.prisma.hoaDon.findUnique({
+            where: { id },
+            select: { khuTroId: true },
+          }),
+          this.prisma.phieuThu.findUnique({
+            where: { id },
+            select: { khuTroId: true },
+          }),
+        ]);
       return (
         phong?.khuTroId ??
         khoiNha?.khuTroId ??
         tang?.khoiNha.khuTroId ??
         dichVu?.khuTroId ??
         congTo?.khuTroId ??
+        hoaDon?.khuTroId ??
+        phieuThu?.khuTroId ??
         id
       );
     }

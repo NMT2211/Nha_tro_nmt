@@ -67,7 +67,7 @@ function run(modulePath, args, nodeArgs = []) {
 
 console.log('E2E database: applying committed Prisma migrations...');
 run('node_modules/prisma/build/index.js', ['migrate', 'deploy']);
-console.log('E2E database ready. Running Phase 3 and Phase 4 E2E tests...');
+console.log('E2E database ready. Running Phase 3, Phase 4, and Phase 5 E2E tests...');
 run(
   'node_modules/jest/bin/jest.js',
   [
