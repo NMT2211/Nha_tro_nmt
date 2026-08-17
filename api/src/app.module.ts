@@ -19,6 +19,7 @@ import { DichVuModule } from './dich-vu/dich-vu.module';
 import { CongToModule } from './cong-to/cong-to.module';
 import { HoaDonModule } from './hoa-don/hoa-don.module';
 import { PhieuThuModule } from './phieu-thu/phieu-thu.module';
+import { CuTruModule } from './cu-tru/cu-tru.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PhieuThuModule } from './phieu-thu/phieu-thu.module';
     CongToModule,
     HoaDonModule,
     PhieuThuModule,
+    CuTruModule,
   ],
   controllers: [AppController],
   providers: [AppService],

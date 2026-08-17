@@ -135,6 +135,10 @@ describe('Phase 5 billing E2E', () => {
       .set(auth())
       .send({ hanThanhToanSauNgay: 5 })
       .expect(200);
+    await prisma.cauHinhKhuTro.updateMany({
+      where: { khuTroId },
+      data: { tuNgay: new Date('2026-08-01T00:00:00.000Z') },
+    });
     const phong = await request(app.getHttpServer())
       .post(`/api/khu-tro/${khuTroId}/phong`)
       .set(auth())

@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
-import { CaNhanController } from './ca-nhan.controller';
-import { CaNhanService } from './ca-nhan.service';
 import { IdentityDataModule } from '../common/security/identity-data.module';
-
+import { CuTruController } from './cu-tru.controller';
+import { CuTruService } from './cu-tru.service';
 @Module({
   imports: [AuthorizationModule, IdentityDataModule],
-  controllers: [CaNhanController],
-  providers: [CaNhanService],
+  controllers: [CuTruController],
+  providers: [CuTruService],
 })
-export class CaNhanModule {}
+export class CuTruModule {}

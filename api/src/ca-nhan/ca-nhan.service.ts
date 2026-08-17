@@ -3,15 +3,14 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { createCipheriv, createHmac, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { Prisma } from '../../generated/prisma/client';
 import { PermissionService } from '../authorization/permission.service';
 import { PERMISSIONS } from '../common/constants/permissions';
 import { parseDateOnly } from '../common/domain/rental';
 import { PrismaService } from '../prisma/prisma.service';
+import { IdentityDataService } from '../common/security/identity-data.service';
 import type {
   CaNhanQueryDto,
   CreateCaNhanDto,
@@ -29,7 +28,7 @@ export class CaNhanService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly permissions: PermissionService,
-    private readonly config: ConfigService,
+    private readonly identityData: IdentityDataService,
   ) {}
 
   async create(userId: string, dto: CreateCaNhanDto) {
@@ -161,7 +160,7 @@ export class CaNhanService {
     await this.authorize(userId, dto.khuTroId, PERMISSIONS.NGUOI_THUE_SUA);
     const khu = await this.khu(dto.khuTroId);
     const { khuTroId, soGiayTo, ngayCap, ngayHetHan, ...data } = dto;
-    const secure = this.protectDocumentNumber(soGiayTo);
+    const secure = this.identityData.protect(soGiayTo);
     try {
       return await this.prisma.$transaction(async (tx) => {
         const row = await tx.giayToTuyThan.create({
@@ -219,7 +218,7 @@ export class CaNhanService {
         where: { id },
         data: {
           ...data,
-          ...(soGiayTo ? this.protectDocumentNumber(soGiayTo) : {}),
+          ...(soGiayTo ? this.identityData.protect(soGiayTo) : {}),
           ...(ngayCap ? { ngayCap: parseDateOnly(ngayCap) } : {}),
           ...(ngayHetHan ? { ngayHetHan: parseDateOnly(ngayHetHan) } : {}),
         },
@@ -404,6 +403,9 @@ export class CaNhanService {
             },
           },
         },
+        { hoSoCuTrus: { some: { khuTroId } } },
+        { khachLuuTrus: { some: { khuTroId } } },
+        { nguoiDuocTham: { some: { khuTroId } } },
       ],
     };
   }
@@ -426,30 +428,6 @@ export class CaNhanService {
     });
     if (!row) throw new NotFoundException('Không tìm thấy khu trọ');
     return row;
-  }
-  private protectDocumentNumber(value: string) {
-    const encoded = this.config.get<string>('IDENTITY_DATA_KEY');
-    if (!encoded)
-      throw new ServiceUnavailableException(
-        'Chưa cấu hình khóa mã hóa dữ liệu giấy tờ',
-      );
-    const key = Buffer.from(encoded, 'base64');
-    if (key.length !== 32)
-      throw new ServiceUnavailableException(
-        'Khóa mã hóa dữ liệu giấy tờ không hợp lệ',
-      );
-    const normalized = value.trim().toUpperCase();
-    const iv = randomBytes(12);
-    const cipher = createCipheriv('aes-256-gcm', key, iv);
-    const ciphertext = Buffer.concat([
-      cipher.update(normalized, 'utf8'),
-      cipher.final(),
-    ]);
-    const tag = cipher.getAuthTag();
-    return {
-      soGiayToMaHoa: `v1.${iv.toString('base64url')}.${tag.toString('base64url')}.${ciphertext.toString('base64url')}`,
-      soGiayToHash: createHmac('sha256', key).update(normalized).digest('hex'),
-    };
   }
   private validatePeriod(start?: string, end?: string) {
     if (start && end && parseDateOnly(end) < parseDateOnly(start))

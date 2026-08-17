@@ -49,6 +49,9 @@ const env = {
     process.env.JWT_REFRESH_SECRET ??
     'e2e_refresh_secret_only_32_characters_minimum',
   CORS_ORIGINS: '',
+  IDENTITY_DATA_KEY:
+    process.env.IDENTITY_DATA_KEY ??
+    'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=',
 };
 function run(modulePath, args, nodeArgs = []) {
   const result = spawnSync(
@@ -67,7 +70,7 @@ function run(modulePath, args, nodeArgs = []) {
 
 console.log('E2E database: applying committed Prisma migrations...');
 run('node_modules/prisma/build/index.js', ['migrate', 'deploy']);
-console.log('E2E database ready. Running Phase 3, Phase 4, and Phase 5 E2E tests...');
+console.log('E2E database ready. Running Phase 3, Phase 4, Phase 5, and Phase 6 E2E tests...');
 run(
   'node_modules/jest/bin/jest.js',
   [

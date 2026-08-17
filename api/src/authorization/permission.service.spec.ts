@@ -37,4 +37,47 @@ describe('PermissionService', () => {
       false,
     );
   });
+  it('resolves every residence resource to its actual KhuTro', async () => {
+    const prisma = {
+      hoSoCuTru: {
+        findUnique: jest.fn().mockResolvedValue({ khuTroId: 'k1' }),
+      },
+      khachLuuTru: {
+        findUnique: jest.fn().mockResolvedValue({ khuTroId: 'k2' }),
+      },
+      tamVang: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ hopDong: { khuTroId: 'k3' } }),
+      },
+    };
+    const service = new PermissionService(prisma as unknown as PrismaService);
+    await expect(service.resolveKhuTroId({ hoSoCuTruId: 'h' })).resolves.toBe(
+      'k1',
+    );
+    await expect(service.resolveKhuTroId({ khachLuuTruId: 'g' })).resolves.toBe(
+      'k2',
+    );
+    await expect(service.resolveKhuTroId({ tamVangId: 'a' })).resolves.toBe(
+      'k3',
+    );
+  });
+  it('does not treat an unknown generic id as a KhuTro id', async () => {
+    const none = { findFirst: jest.fn().mockResolvedValue(null) };
+    const unique = { findUnique: jest.fn().mockResolvedValue(null) };
+    const prisma = {
+      khuTro: none,
+      phong: none,
+      khoiNha: none,
+      tang: none,
+      dichVu: none,
+      congTo: none,
+      hoaDon: unique,
+      phieuThu: unique,
+    };
+    const service = new PermissionService(prisma as unknown as PrismaService);
+    await expect(
+      service.resolveKhuTroId({ id: 'unknown' }),
+    ).resolves.toBeUndefined();
+  });
 });

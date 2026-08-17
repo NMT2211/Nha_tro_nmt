@@ -96,8 +96,35 @@ export class PermissionService {
     const hopDongId = read('hopDongId');
     const hoaDonId = read('hoaDonId');
     const phieuThuId = read('phieuThuId');
+    const hoSoCuTruId = read('hoSoCuTruId');
+    const khachLuuTruId = read('khachLuuTruId');
+    const tamVangId = read('tamVangId');
     const id = read('id');
     if (khuTroId) return khuTroId;
+    if (hoSoCuTruId) {
+      return (
+        await this.prisma.hoSoCuTru.findUnique({
+          where: { id: hoSoCuTruId },
+          select: { khuTroId: true },
+        })
+      )?.khuTroId;
+    }
+    if (khachLuuTruId) {
+      return (
+        await this.prisma.khachLuuTru.findUnique({
+          where: { id: khachLuuTruId },
+          select: { khuTroId: true },
+        })
+      )?.khuTroId;
+    }
+    if (tamVangId) {
+      return (
+        await this.prisma.tamVang.findUnique({
+          where: { id: tamVangId },
+          select: { hopDong: { select: { khuTroId: true } } },
+        })
+      )?.hopDong.khuTroId;
+    }
     if (dichVuId) {
       const row = await this.prisma.dichVu.findFirst({
         where: { id: dichVuId, deletedAt: null },
@@ -155,8 +182,12 @@ export class PermissionService {
       return tang?.khoiNha.khuTroId;
     }
     if (id) {
-      const [phong, khoiNha, tang, dichVu, congTo, hoaDon, phieuThu] =
+      const [khuTro, phong, khoiNha, tang, dichVu, congTo, hoaDon, phieuThu] =
         await Promise.all([
+          this.prisma.khuTro.findFirst({
+            where: { id, deletedAt: null },
+            select: { id: true },
+          }),
           this.prisma.phong.findFirst({
             where: { id, deletedAt: null },
             select: { khuTroId: true },
@@ -187,14 +218,14 @@ export class PermissionService {
           }),
         ]);
       return (
+        khuTro?.id ??
         phong?.khuTroId ??
         khoiNha?.khuTroId ??
         tang?.khoiNha.khuTroId ??
         dichVu?.khuTroId ??
         congTo?.khuTroId ??
         hoaDon?.khuTroId ??
-        phieuThu?.khuTroId ??
-        id
+        phieuThu?.khuTroId
       );
     }
     return undefined;
